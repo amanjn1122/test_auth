@@ -2,8 +2,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
-import dbConnect from '@/lib/dbConnect';
-import User from '@/models/User';
+// import dbConnect from '@/lib/dbConnect';
+// import User from '@/models/User';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { provider } = req.query;  // 'google' or 'github'
@@ -74,13 +74,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // userResponse.data.email=userResponse.data[0].email
     // userResponse.data.name="aaa"
     const user = userResponse.data;
-    await dbConnect();
+    // await dbConnect();
 
     // Check if the user exists, otherwise create a new one
-    const existingUser = await User.findOne({ email: user.email });
-    if (!existingUser) {
-      await User.create({ email: user.email, name: user.name, image: user.avatar_url });
-    }
+    // const existingUser = await User.findOne({ email: user.email });
+    // if (!existingUser) {
+    //   await User.create({ email: user.email, name: user.name, image: user.avatar_url });
+    // }
 
     // Ensure JWT_SECRET is defined
     const jwtSecret = process.env.JWT_SECRET;
