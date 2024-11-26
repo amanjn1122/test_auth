@@ -1,11 +1,11 @@
 // pages/index.tsx
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import Cookies from 'js-cookie';
+import { useState } from 'react';
+// import { useRouter } from 'next/router';
+// import Cookies from 'js-cookie';
 
 const HomePage = () => {
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  // const router = useRouter();
 
   // useEffect(() => {
   //   // Check if the user is authenticated by looking for the JWT in cookies
