@@ -1,17 +1,24 @@
-// pages/api/auth/callback/[provider].ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 // import dbConnect from '@/lib/dbConnect';
 // import User from '@/models/User';
+import { redirectMap } from '@/shared/memory';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { provider } = req.query;  // 'google' or 'github'
   // const code = req.query.code as string;
   const { code, state } = req.query;  // 'code' is the authorization code returned by Google
-  const redirectUri = state as string; // Use the `state` param to redirect user to the original `redirect` URL.
+  // const redirectUri = state as string; // Use the `state` param to redirect user to the original `redirect` URL.
 
-  console.log("url ---->>>",redirectUri)
+  // console.log("inmemory map ->>",redirectMap)
+  if (!state || !redirectMap.has(state as string)) {
+    return res.status(400).json({ message: 'Abuse of api detected: Invalid or missing state parameter' });
+  }
+
+  const redirectUri = redirectMap.get(state as string);
+
+  // console.log("url ---->>>",redirectUri)
 
   if (!code) {
     return res.status(400).json({ message: 'Missing authorization code' });
@@ -47,6 +54,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { access_token } = tokenResponse.data;
     // console.log(tokenResponse)
+    const isStateDeleted = redirectMap.delete(state as string)
+    if(isStateDeleted)
+    console.log(`Debug: state associated with ${state} is deleted`)
 
     // Get user info using the access token
     let userResponse;
@@ -76,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const user = userResponse.data;
     // await dbConnect();
 
-    // Check if the user exists, otherwise create a new one
+    // // Check if the user exists, otherwise create a new one
     // const existingUser = await User.findOne({ email: user.email });
     // if (!existingUser) {
     //   await User.create({ email: user.email, name: user.name, image: user.avatar_url });
@@ -99,3 +109,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ message: 'Authentication failed' });
   }
 }
+
