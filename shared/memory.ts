@@ -1,0 +1,1 @@
+export const redirectMap = new Map<string, string>();
