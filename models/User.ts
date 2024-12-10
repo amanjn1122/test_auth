@@ -1,16 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 
-/* name : Encrypted full name of user (Required)
-   email: Encoded email of user (Required)
-   audit: Array of time objects by user for a quiz. (Optional)
-          time: {
-            quizId: 'ObjectId of Quiz' (Required)
-            timeTaken: 'Integer in milliseconds denoting time taken to complete the quiz'
-            score: 'Overall score of user's corresponding to quizId'
-            attempted: Responses of user
-          }
-*/
-
 // Define a schema for the data structure
 const userSchema = new Schema({
     name: {
@@ -24,7 +13,20 @@ const userSchema = new Schema({
     password: {
         type: String,
         select: false
+    },
+    session: {
+        accessToken: {
+            type: String,
+            required: true
+        },
+        refreshToken: {
+            type: String,
+            required: true
+        }
     }
 });
-const User = mongoose.models?.User || mongoose.model('User', userSchema)
-export default User
+
+// Create the User model or use an existing one
+const User = mongoose.models?.User || mongoose.model('User', userSchema);
+
+export default User;
