@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
-import jwt from 'jsonwebtoken';
-import dbConnect from '@/lib/dbConnect';
-import User from '@/models/User';
+// import jwt from 'jsonwebtoken';
+// import dbConnect from '@/lib/dbConnect';
+// import User from '@/models/User';
 import { redirectMap } from '@/shared/memory';
+import { createUser, fetchUser, generateAccessToken, generateRefreshToken, updateUser } from '@/utils/utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { provider } = req.query;  // 'google' or 'github'
@@ -84,29 +85,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // userResponse.data.email=userResponse.data[0].email
     // userResponse.data.name="aaa"
     const user = userResponse.data;
-    await dbConnect();
+    // await dbConnect();
 
     // Check if the user exists, otherwise create a new one
-    const existingUser = await User.findOne({ email: user.email });
+    // const existingUser = await User.findOne({ email: user.email });
+    const existingUser = await fetchUser(user.email)
     if (!existingUser) {
-      await User.create({ email: user.email, name: user.name, image: user.avatar_url });
+      // await User.create({ email: user.email, name: user.name, image: user.avatar_url });
+      await createUser(user);
     }
 
-    // Ensure JWT_SECRET is defined
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      return res.status(500).json({ message: 'Server configuration error: JWT_SECRET is not defined' });
-    }
+    // // Ensure JWT_SECRET and REFRESH_TOKEN_SECRET are defined 
+    // const jwtSecret = process.env.JWT_SECRET; 
+    // const refreshTokenSecret = process.env.JWT_SECRET_REFRESH_TOKEN; 
+    // if (!jwtSecret || !refreshTokenSecret) { 
+    //   return res.status(500).json({ message: 'Server configuration error: JWT_SECRET or REFRESH_TOKEN_SECRET is not defined' }); 
+    // }
 
-    // Create a JWT token to maintain the session
-    const token = jwt.sign({ email: user.email, name: user.name }, jwtSecret, { expiresIn: '1h' });
-
+    // // Create an access token and refresh token 
+    // const accessToken = jwt.sign({ email: user.email, name: user.name }, jwtSecret, { expiresIn: '1h', algorithm: 'RS256' }); // Access token with a shorter lifespan 
+    // const refreshToken = jwt.sign({ email: user.email, name: user.name }, refreshTokenSecret, { expiresIn: '7d', algorithm: 'RS256' }); // Refresh token with a longer lifespan 
+    
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    // Save the refresh token in the database (or a secure place) 
+    // await User.updateOne({ email: user.email }, { refreshToken: refreshToken });
+    await updateUser({...user, session: {refreshToken: refreshToken, accessToken: accessToken}})
     
     // Redirect to the dashboard with the token as query parameter
-    return res.redirect(redirectUri+"?token="+token);
+    res.redirect(redirectUri+"?accesstoken="+accessToken+"&refresh_token="+refreshToken);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Authentication failed' });
+    return res.status(500).json({ message: 'Authentication failed: '+ error });
   }
 }
 
