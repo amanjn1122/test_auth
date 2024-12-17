@@ -22,7 +22,7 @@ export const fetchUser = async (email: string) => {
 
 export const createUser = async (user: UserInfo) => {
     try{
-        await User.create({ email: user.email, name: user.name });
+        await User.create({ email: user.email, name: user.name, session: user.session });
         return;
     }
     catch(error){
