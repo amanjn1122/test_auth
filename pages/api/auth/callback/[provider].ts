@@ -85,6 +85,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // userResponse.data.email=userResponse.data[0].email
     // userResponse.data.name="aaa"
     const user = userResponse.data;
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    user.session = {accessToken: accessToken, refreshToken: refreshToken}
     // await dbConnect();
 
     // Check if the user exists, otherwise create a new one
@@ -106,11 +110,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // const accessToken = jwt.sign({ email: user.email, name: user.name }, jwtSecret, { expiresIn: '1h', algorithm: 'RS256' }); // Access token with a shorter lifespan 
     // const refreshToken = jwt.sign({ email: user.email, name: user.name }, refreshTokenSecret, { expiresIn: '7d', algorithm: 'RS256' }); // Refresh token with a longer lifespan 
     
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    // const accessToken = generateAccessToken(user);
+    // const refreshToken = generateRefreshToken(user);
     // Save the refresh token in the database (or a secure place) 
     // await User.updateOne({ email: user.email }, { refreshToken: refreshToken });
-    await updateUser({...user, session: {refreshToken: refreshToken, accessToken: accessToken}})
+    else{
+      await updateUser({...user, session: {refreshToken: refreshToken, accessToken: accessToken}})
+    }
     
     // Redirect to the dashboard with the token as query parameter
     res.redirect(redirectUri+"?accesstoken="+accessToken+"&refresh_token="+refreshToken);
